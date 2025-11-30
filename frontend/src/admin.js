@@ -1,6 +1,5 @@
-const BASE_URL = "http://localhost:8080/";
+const BASE_URL = "https://shrinkit-backend-faz4.onrender.com/";
 
-// DOM Elements
 const dropdown_content = document.getElementById("dropdown-content");
 const logout_btn = document.getElementById("nav-logout-btn");
 const all_links = document.getElementById("all-links");
@@ -13,7 +12,6 @@ const shrink_full_url = document.getElementById("full-url");
 const search_category = document.getElementById("search-options");
 const full_url_btn = document.getElementById("full-url-btn");
 
-// INIT
 countClicks();
 fetchUsers();
 
@@ -21,26 +19,22 @@ function dropdown_menu() {
     dropdown_content.style.display = "block";
 }
 
-// ---------------- LOGOUT ----------------
 logout_btn?.addEventListener("click", () => {
-    if (confirm("Are you sure you want to log out?")) {
-        localStorage.clear();
-        window.location.href = "./index.html";
-    }
+    localStorage.clear();
+    window.location.href = "./index.html";
 });
 
-// ---------------- FETCH USERS ----------------
 async function fetchUsers() {
     try {
-        const res = await fetch(`${BASE_URL}user/allusers`); 
+        const res = await fetch(`${BASE_URL}user/allusers`);
         const data = await res.json();
         displayData(data);
     } catch (err) {
-        console.error(err);
+        console.error("Fetch Users Error:", err);
+        swal("Error", "Backend Not Responding", "error");
     }
 }
 
-// ---------------- DISPLAY USERS ----------------
 function displayData(data) {
     all_users.innerText = data.length;
 
@@ -62,30 +56,22 @@ function displayData(data) {
     });
 }
 
-// ---------------- COUNT CLICKS ----------------
 function countClicks() {
     fetch(`${BASE_URL}url/all`)
         .then(res => res.json())
         .then(res => {
+            if (!Array.isArray(res)) return;
 
-            if (!Array.isArray(res)) {
-                console.error("Expected array, got:", res);
-                return;
-            }
+            let totalClicks = res.reduce((sum, item) => sum + (item.visited || 0), 0);
 
-            let allClicks = 0;
-            let allinks = res.length;
-
-            res.forEach(element => {
-                allClicks += Number(element.visited || 0);
-            });
-
-            all_clicks.innerText = allClicks;
-            all_links.innerText = allinks;
+            all_links.innerText = res.length;
+            all_clicks.innerText = totalClicks;
+        })
+        .catch(() => {
+            swal("Error", "Unable to load link stats", "error");
         });
 }
 
-// ---------------- SEARCH ----------------
 if (shrink_form) {
     shrink_form.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -95,17 +81,22 @@ if (shrink_form) {
         const category = search_category.value || "name";
         const searchValue = shrink_full_url.value;
 
-        const request = await fetch(`${BASE_URL}user/search?category=${category}&term=${searchValue}`);
-        const response = await request.json();
+        try {
+            const request = await fetch(`${BASE_URL}user/search?category=${category}&term=${searchValue}`);
+            const response = await request.json();
 
-        url_list_box.innerHTML = response.map(element => `
-            <div class="url-list">
-                <p><strong>Client ID: </strong>${element._id}</p>
-                <p><strong>Name: </strong>${element.name}</p>
-                <p><strong>Email: </strong>${element.email}</p>
-                <button id="${element._id}">User Detail</button>
-            </div>
-        `).join("");
+            url_list_box.innerHTML = response.map(element => `
+                <div class="url-list">
+                    <p><strong>Client ID: </strong>${element._id}</p>
+                    <p><strong>Name: </strong>${element.name}</p>
+                    <p><strong>Email: </strong>${element.email}</p>
+                    <button id="${element._id}">User Detail</button>
+                </div>
+            `).join("");
+
+        } catch (err) {
+            swal("Error", "Search failed", "error");
+        }
 
         full_url_btn.innerHTML = "Search";
     });
