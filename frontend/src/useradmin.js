@@ -1,13 +1,13 @@
 const tbody = document.getElementById("tbody");
-const BASE_URL = "https://beige-swordfish-wear.cyclic.app";
+const BASE_URL = "https://shrinkit-backend-faz4.onrender.com";
 
 // ---------------- GET ALL USERS ----------------
 async function fetchUsers() {
     try {
-        const response = await fetch(`${BASE_URL}/user/allusers`);
-        const users = await response.json();
+        const res = await fetch(`${BASE_URL}/user/allusers`);
+        const users = await res.json();
 
-        tbody.innerHTML = ""; 
+        tbody.innerHTML = "";
         renderTable(users);
 
     } catch (err) {
@@ -18,8 +18,7 @@ async function fetchUsers() {
 
 fetchUsers();
 
-
-// ---------------- DISPLAY USERS ----------------
+// ---------------- RENDER TABLE ----------------
 function renderTable(users) {
     users.forEach(user => {
         const tr = document.createElement("tr");
@@ -37,38 +36,47 @@ function renderTable(users) {
     activateDeleteButtons();
 }
 
-
-// ---------------- ACTIVATE DELETE BUTTONS ----------------
+// ---------------- DELETE USER ----------------
 function activateDeleteButtons() {
-    const deleteBtns = document.querySelectorAll(".delete-btn");
-
-    deleteBtns.forEach(btn => {
+    document.querySelectorAll(".delete-btn").forEach(btn => {
         btn.addEventListener("click", async () => {
             const userId = btn.dataset.id;
 
-            try {
-                const res = await fetch(`${BASE_URL}/user/delete/${userId}`, {
-                    method: "DELETE"
-                });
+            swal({
+                title: "Are you sure?",
+                text: "This action cannot be undone!",
+                icon: "warning",
+                buttons: ["Cancel", "Delete"],
+                dangerMode: true,
+            }).then(async (confirmDelete) => {
+                if (!confirmDelete) return;
 
-                const result = await res.json();
-
-                if (res.ok) {
-                    swal({
-                        title: "User Deleted",
-                        text: "Successfully removed user",
-                        icon: "success",
-                        buttons: false,
-                        timer: 900
+                try {
+                    const res = await fetch(`${BASE_URL}/user/delete/${userId}`, {
+                        method: "DELETE"
                     });
 
-                    btn.parentElement.remove(); // remove row without reload
-                }
+                    const result = await res.json();
 
-            } catch (err) {
-                console.log("Delete error:", err);
-                swal("Error", "Failed to delete user", "error");
-            }
+                    if (res.ok) {
+                        swal({
+                            title: "Deleted!",
+                            text: "User removed successfully",
+                            icon: "success",
+                            buttons: false,
+                            timer: 900
+                        });
+
+                        btn.parentElement.remove();
+                    } else {
+                        swal("Error", result.msg || "Failed to delete user", "error");
+                    }
+
+                } catch (err) {
+                    console.log("Delete error:", err);
+                    swal("Error", "Failed to delete user", "error");
+                }
+            });
         });
     });
 }
