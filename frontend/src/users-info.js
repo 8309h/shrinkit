@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8080/";
+const BASE_URL = "https://shrinkit-backend-faz4.onrender.com";
 const userId = localStorage.getItem("clientID");
 
 const url_list_box = document.getElementById("url-list-box");
