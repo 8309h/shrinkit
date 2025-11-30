@@ -57,7 +57,7 @@ function renderURLList(urls) {
     const box = document.getElementById("url-list-box");
 
     box.innerHTML = urls.map(item => {
-        const shortUrl = `${BASE}${item.shortUrl}`;
+        const shortUrl = `${BASE}url/${item.shortUrl}`;
         return `
             <div class="url-list">
                 <a target="_blank" class="fullUrl" href="${item.longUrl}">
